@@ -367,6 +367,10 @@
 #    'trove_api_ssl_port' (Defaults to 13779)
 #  Defaults to {}
 #
+# [*opendaylight*]
+#  (optional) Enable or not OpenDaylight binding
+#  Defaults to false
+#
 class tripleo::loadbalancer (
   $controller_virtual_ip,
   $control_virtual_interface,
@@ -435,7 +439,8 @@ class tripleo::loadbalancer (
   $redis                     = false,
   $redis_password            = undef,
   $midonet_api               = false,
-  $service_ports             = {}
+  $service_ports             = {},
+  $opendaylight              = false
 ) {
   $default_service_ports = {
     aodh_api_port => 8042,
@@ -1432,6 +1437,27 @@ class tripleo::loadbalancer (
       ipaddresses       => hiera('midonet_api_node_ips', $controller_hosts_real),
       server_names      => $controller_hosts_names_real,
       options           => $haproxy_member_options,
+
+  $opendaylight_api_vip = hiera('opendaylight_api_vip', $controller_virtual_ip)
+  $opendaylight_bind_opts = {
+    "${opendaylight_api_vip}:8081" => [],
+    "${public_virtual_ip}:8081" => [],
+  }
+
+  if $opendaylight {
+    haproxy::listen { 'opendaylight':
+      bind             => $opendaylight_bind_opts,
+      options          => {
+        'balance'   => 'source',
+      },
+      collect_exported => false,
+    }
+    haproxy::balancermember { 'opendaylight':
+      listening_service => 'opendaylight',
+      ports             => '8081',
+      ipaddresses       => hiera('opendaylight_api_node_ips', $controller_hosts_real),
+      server_names      => $controller_hosts_names_real,
+      options           => ['check', 'inter 2000', 'rise 2', 'fall 5'],
     }
   }
 }
