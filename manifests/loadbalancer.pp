@@ -225,6 +225,10 @@
 #  (optional) Enable or not Cinder API binding
 #  Defaults to false
 #
+# [*congress*]
+#  (optional) Enable or not Congress API binding
+#  Defaults to false
+#
 # [*manila*]
 #  (optional) Enable or not Manila API binding
 #  Defaults to false
@@ -331,6 +335,7 @@
 #    'ceilometer_api_ssl_port' (Defaults to 13777)
 #    'cinder_api_port' (Defaults to 8776)
 #    'cinder_api_ssl_port' (Defaults to 13776)
+#    'congress_api_port' (Defaults to 1789)
 #    'glance_api_port' (Defaults to 9292)
 #    'glance_api_ssl_port' (Defaults to 13292)
 #    'glance_registry_port' (Defaults to 9191)
@@ -415,6 +420,7 @@ class tripleo::loadbalancer (
   $keystone_public           = false,
   $neutron                   = false,
   $cinder                    = false,
+  $congress                  = false,
   $sahara                    = false,
   $trove                     = false,
   $manila                    = false,
@@ -449,6 +455,7 @@ class tripleo::loadbalancer (
     ceilometer_api_ssl_port => 13777,
     cinder_api_port => 8776,
     cinder_api_ssl_port => 13776,
+    congress_api_port => 1789,
     glance_api_port => 9292,
     glance_api_ssl_port => 13292,
     glance_registry_port => 9191,
@@ -1458,6 +1465,29 @@ class tripleo::loadbalancer (
       listening_service => 'opendaylight',
       ports             => '8081',
       ipaddresses       => hiera('opendaylight_api_node_ips', $controller_hosts_real),
+      server_names      => $controller_hosts_names_real,
+      options           => ['check', 'inter 2000', 'rise 2', 'fall 5'],
+    }
+  }
+
+  $congress_api_vip = hiera('congress_api_vip', $controller_virtual_ip)
+  $congress_bind_opts = {
+    "${congress_api_vip}:${ports[congress_api_port]}" => $haproxy_listen_bind_param,
+    "${public_virtual_ip}:${ports[congress_api_port]}" => $haproxy_listen_bind_param,
+  }
+
+  if $congress {
+    haproxy::listen { 'congress':
+      bind             => $congress_bind_opts,
+      options          => {
+        'balance'   => 'source',
+      },
+      collect_exported => false,
+    }
+    haproxy::balancermember { 'congress':
+      listening_service => 'congress',
+      ports             => '1789',
+      ipaddresses       => $controller_hosts_real,
       server_names      => $controller_hosts_names_real,
       options           => ['check', 'inter 2000', 'rise 2', 'fall 5'],
     }
