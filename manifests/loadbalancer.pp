@@ -1437,6 +1437,8 @@ class tripleo::loadbalancer (
       ipaddresses       => hiera('midonet_api_node_ips', $controller_hosts_real),
       server_names      => $controller_hosts_names_real,
       options           => $haproxy_member_options,
+    }
+  }
 
   $opendaylight_api_vip = hiera('opendaylight_api_vip', $controller_virtual_ip)
   $opendaylight_bind_opts = {
