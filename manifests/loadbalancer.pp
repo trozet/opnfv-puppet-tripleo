@@ -174,6 +174,11 @@
 #  When set, enables SSL on the Sahara public API endpoint using the specified file.
 #  Defaults to undef
 #
+# [*congress_certificate*]
+#  Filename of an HAProxy-compatible certificate and key file
+#  When set, enables SSL on the Congress public API endpoint using the specified file.
+#  Defaults to undef
+#
 # [*trove_certificate*]
 #  Filename of an HAProxy-compatible certificate and key file
 #  When set, enables SSL on the Trove public API endpoint using the specified file.
@@ -336,6 +341,7 @@
 #    'cinder_api_port' (Defaults to 8776)
 #    'cinder_api_ssl_port' (Defaults to 13776)
 #    'congress_api_port' (Defaults to 1789)
+#    'congress_api_ssl_port' (Defaults to 11789)
 #    'glance_api_port' (Defaults to 9292)
 #    'glance_api_ssl_port' (Defaults to 13292)
 #    'glance_registry_port' (Defaults to 9191)
@@ -403,6 +409,7 @@ class tripleo::loadbalancer (
   $keystone_certificate      = undef,
   $neutron_certificate       = undef,
   $cinder_certificate        = undef,
+  $congress_certificate      = undef,
   $sahara_certificate        = undef,
   $trove_certificate         = undef,
   $manila_certificate        = undef,
@@ -456,6 +463,7 @@ class tripleo::loadbalancer (
     cinder_api_port => 8776,
     cinder_api_ssl_port => 13776,
     congress_api_port => 1789,
+    congress_api_ssl_port => 11789,
     glance_api_port => 9292,
     glance_api_ssl_port => 13292,
     glance_registry_port => 9191,
@@ -604,6 +612,11 @@ class tripleo::loadbalancer (
   } else {
     $cinder_bind_certificate = $service_certificate
   }
+  if $congress_certificate {
+    $congress_bind_certificate = $congress_certificate
+  } else {
+    $congress_bind_certificate = $service_certificate
+  }
   if $sahara_certificate {
     $sahara_bind_certificate = $sahara_certificate
   } else {
@@ -715,6 +728,19 @@ class tripleo::loadbalancer (
     $cinder_bind_opts = {
       "${cinder_api_vip}:${ports[cinder_api_port]}" => $haproxy_listen_bind_param,
       "${public_virtual_ip}:${ports[cinder_api_port]}" => $haproxy_listen_bind_param,
+    }
+  }
+
+  $congress_api_vip = hiera('congress_api_vip', $controller_virtual_ip)
+  if $congress_bind_certificate {
+    $congress_bind_opts = {
+      "${congress_api_vip}:${ports[congress_api_port]}" => $haproxy_listen_bind_param,
+      "${public_virtual_ip}:${ports[congress_api_ssl_port]}" => union($haproxy_listen_bind_param, ['ssl', 'crt', $congress_bind_certificate]),
+    }
+  } else {
+    $congress_bind_opts = {
+      "${congress_api_vip}:${ports[congress_api_port]}" => $haproxy_listen_bind_param,
+      "${public_virtual_ip}:${ports[congress_api_port]}" => $haproxy_listen_bind_param,
     }
   }
 
@@ -1470,26 +1496,17 @@ class tripleo::loadbalancer (
     }
   }
 
-  $congress_api_vip = hiera('congress_api_vip', $controller_virtual_ip)
-  $congress_bind_opts = {
-    "${congress_api_vip}:${ports[congress_api_port]}" => $haproxy_listen_bind_param,
-    "${public_virtual_ip}:${ports[congress_api_port]}" => $haproxy_listen_bind_param,
-  }
-
   if $congress {
     haproxy::listen { 'congress':
       bind             => $congress_bind_opts,
-      options          => {
-        'balance'   => 'source',
-      },
       collect_exported => false,
     }
     haproxy::balancermember { 'congress':
       listening_service => 'congress',
       ports             => '1789',
-      ipaddresses       => $controller_hosts_real,
+      ipaddresses       => hiera('congress_api_node_ips', $controller_hosts_real),
       server_names      => $controller_hosts_names_real,
-      options           => ['check', 'inter 2000', 'rise 2', 'fall 5'],
+      options           => $haproxy_member_options,
     }
   }
 }
