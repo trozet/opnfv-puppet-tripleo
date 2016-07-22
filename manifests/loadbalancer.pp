@@ -177,6 +177,10 @@
 # [*congress_certificate*]
 #  Filename of an HAProxy-compatible certificate and key file
 #  When set, enables SSL on the Congress public API endpoint using the specified file.
+#
+# [*tacker_certificate*]
+#  Filename of an HAProxy-compatible certificate and key file
+#  When set, enables SSL on the Tacker public API endpoint using the specified file.
 #  Defaults to undef
 #
 # [*trove_certificate*]
@@ -286,6 +290,10 @@
 #  (optional) Enable or not Swift API binding
 #  Defaults to false
 #
+# [*tacker*]
+#  (optional) Enable or not Tacker API binding
+#  Defaults to false
+#
 # [*heat_api*]
 #  (optional) Enable or not Heat API binding
 #  Defaults to false
@@ -374,6 +382,8 @@
 #    'sahara_api_ssl_port' (Defaults to 13386)
 #    'swift_proxy_port' (Defaults to 8080)
 #    'swift_proxy_ssl_port' (Defaults to 13808)
+#    'tacker_api_port' (Defaults to 8888)
+#    'tacker_api_ssl_port' (Defaults to 8443)
 #    'trove_api_port' (Defaults to 8779)
 #    'trove_api_ssl_port' (Defaults to 13779)
 #  Defaults to {}
@@ -411,6 +421,7 @@ class tripleo::loadbalancer (
   $cinder_certificate        = undef,
   $congress_certificate      = undef,
   $sahara_certificate        = undef,
+  $tacker_certificate       = undef,
   $trove_certificate         = undef,
   $manila_certificate        = undef,
   $glance_certificate        = undef,
@@ -429,6 +440,7 @@ class tripleo::loadbalancer (
   $cinder                    = false,
   $congress                  = false,
   $sahara                    = false,
+  $tacker                    = false,
   $trove                     = false,
   $manila                    = false,
   $glance_api                = false,
@@ -496,6 +508,8 @@ class tripleo::loadbalancer (
     sahara_api_ssl_port => 13386,
     swift_proxy_port => 8080,
     swift_proxy_ssl_port => 13808,
+    tacker_api_port => 8888,
+    tacker_api_ssl_port => 8443,
     trove_api_port => 8779,
     trove_api_ssl_port => 13779,
   }
@@ -621,6 +635,11 @@ class tripleo::loadbalancer (
     $sahara_bind_certificate = $sahara_certificate
   } else {
     $sahara_bind_certificate = $service_certificate
+  }
+  if $tacker_certificate {
+    $tacker_bind_certificate = $tacker_certificate
+  } else {
+    $tacker_bind_certificate = $service_certificate
   }
   if $trove_certificate {
     $trove_bind_certificate = $trove_certificate
@@ -785,6 +804,19 @@ class tripleo::loadbalancer (
     $sahara_bind_opts = {
       "${sahara_api_vip}:${ports[sahara_api_port]}" => $haproxy_listen_bind_param,
       "${public_virtual_ip}:${ports[sahara_api_port]}" => $haproxy_listen_bind_param,
+    }
+  }
+
+  $tacker_api_vip = hiera('tacker_api_vip', $controller_virtual_ip)
+  if $tacker_bind_certificate {
+    $tacker_bind_opts = {
+      "${tacker_api_vip}:${ports[tacker_api_port]}" => $haproxy_listen_bind_param,
+      "${public_virtual_ip}:${ports[tacker_api_ssl_port]}" => union($haproxy_listen_bind_param, ['ssl', 'crt', $tacker_bind_certificate]),
+    }
+  } else {
+    $tacker_bind_opts = {
+      "${tacker_api_vip}:${ports[tacker_api_port]}" => $haproxy_listen_bind_param,
+      "${public_virtual_ip}:${ports[tacker_api_port]}" => $haproxy_listen_bind_param,
     }
   }
 
@@ -1501,10 +1533,25 @@ class tripleo::loadbalancer (
       bind             => $congress_bind_opts,
       collect_exported => false,
     }
+
     haproxy::balancermember { 'congress':
       listening_service => 'congress',
       ports             => '1789',
       ipaddresses       => hiera('congress_api_node_ips', $controller_hosts_real),
+      server_names      => $controller_hosts_names_real,
+      options           => $haproxy_member_options,
+    }
+  }
+
+  if $tacker {
+    haproxy::listen { 'tacker':
+      bind             => $tacker_bind_opts,
+      collect_exported => false,
+    }
+    haproxy::balancermember { 'tacker':
+      listening_service => 'tacker',
+      ports             => '8888',
+      ipaddresses       => hiera('tacker_api_node_ips', $controller_hosts_real),
       server_names      => $controller_hosts_names_real,
       options           => $haproxy_member_options,
     }
