@@ -258,6 +258,10 @@
 #  (optional) Enable or not OVN northd binding
 #  Defaults to hiera('ovn_dbs_enabled', false)
 #
+# [*ovn_dbs_ha_disabled*]
+#  (optional) Whether or not HA is disabled for OVN DB servers
+#  Defaults to hiera('ovn_dbs_ha_disabled', true)
+#
 # [*zaqar_ws*]
 #  (optional) Enable or not Zaqar Websockets binding
 #  Defaults to false
@@ -393,7 +397,8 @@ class tripleo::haproxy (
   $service_ports             = {},
   $congress_network          = hiera('congress_api_network', undef),
   $tacker_network            = hiera('tacker_api_network', undef),
-  $ovn_dbs_network             = hiera('ovn_dbs_network', undef)
+  $ovn_dbs_network           = hiera('ovn_dbs_network', undef),
+  $ovn_dbs_ha_disabled       = hiera('ovn_dbs_ha_disabled', true),
 ) {
   $default_service_ports = {
     aodh_api_port => 8042,
@@ -1128,9 +1133,12 @@ class tripleo::haproxy (
   }
 
 
-  if $ovn_dbs {
+  if $ovn_dbs and $ovn_dbs_ha_disabled {
     # FIXME: is this config enough to ensure we only hit the first node in
     # ovn_northd_node_ips ?
+    # We only configure ovn_dbs_vip in haproxy if HA for OVN DB servers is
+    # disabled.
+    # If HA is enabled, pacemaker configures the OVN DB servers accordingly.
     $ovn_db_listen_options = {
       'option'         => [ 'tcpka' ],
       'timeout client' => '90m',
