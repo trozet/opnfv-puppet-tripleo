@@ -254,6 +254,10 @@
 #  (optional) Enable or not OpenDaylight binding
 #  Defaults to hiera('opendaylight_api_enabled', false)
 #
+# [*ovn_dbs*]
+#  (optional) Enable or not OVN northd binding
+#  Defaults to hiera('ovn_dbs_enabled', false)
+#
 # [*zaqar_ws*]
 #  (optional) Enable or not Zaqar Websockets binding
 #  Defaults to false
@@ -309,6 +313,8 @@
 #    'nova_novnc_port' (Defaults to 6080)
 #    'nova_novnc_ssl_port' (Defaults to 13080)
 #    'opendaylight_api_port' (Defaults to 8081)
+#    'ovn_nbdb_port' (Defaults to 6641)
+#    'ovn_sbdb_port' (Defaults to 6642)
 #    'sahara_api_port' (Defaults to 8386)
 #    'sahara_api_ssl_port' (Defaults to 13386)
 #    'swift_proxy_port' (Defaults to 8080)
@@ -353,6 +359,7 @@ class tripleo::haproxy (
   $sahara                    = hiera('sahara_api_enabled', false),
   $tacker                    = hiera('tacker_enabled', false),
   $trove                     = hiera('trove_api_enabled', false),
+  $ovn_dbs                     = hiera('ovn_dbs_enabled', false),
   $glance_api                = hiera('glance_api_enabled', false),
   $glance_registry           = hiera('glance_registry_enabled', false),
   $nova_osapi                = hiera('nova_api_enabled', false),
@@ -385,7 +392,8 @@ class tripleo::haproxy (
   $ui                        = hiera('enable_ui', false),
   $service_ports             = {},
   $congress_network          = hiera('congress_api_network', undef),
-  $tacker_network            = hiera('tacker_api_network', undef)
+  $tacker_network            = hiera('tacker_api_network', undef),
+  $ovn_dbs_network             = hiera('ovn_dbs_network', undef)
 ) {
   $default_service_ports = {
     aodh_api_port => 8042,
@@ -427,6 +435,8 @@ class tripleo::haproxy (
     nova_novnc_port => 6080,
     nova_novnc_ssl_port => 13080,
     opendaylight_api_port => 8081,
+    ovn_nbdb_port => 6641,
+    ovn_sbdb_port => 6642,
     sahara_api_port => 8386,
     sahara_api_ssl_port => 13386,
     swift_proxy_port => 8080,
@@ -1114,6 +1124,37 @@ class tripleo::haproxy (
       listen_options => {
         'balance' => 'source',
       },
+    }
+  }
+
+
+  if $ovn_dbs {
+    # FIXME: is this config enough to ensure we only hit the first node in
+    # ovn_northd_node_ips ?
+    $ovn_db_listen_options = {
+      'option'         => [ 'tcpka' ],
+      'timeout client' => '90m',
+      'timeout server' => '90m',
+      'stick-table'    => 'type ip size 1000',
+      'stick'          => 'on dst',
+    }
+    ::tripleo::haproxy::endpoint { 'ovn_nbdb':
+      public_virtual_ip => $public_virtual_ip,
+      internal_ip       => hiera('ovn_dbs_vip', $controller_virtual_ip),
+      service_port      => $ports[ovn_nbdb_port],
+      ip_addresses      => hiera('ovn_dbs_node_ips', $controller_hosts_real),
+      server_names      => hiera('ovn_dbs_node_names', $controller_hosts_names_real),
+      listen_options    => $ovn_db_listen_options,
+      mode              => 'tcp'
+    }
+    ::tripleo::haproxy::endpoint { 'ovn_sbdb':
+      public_virtual_ip => $public_virtual_ip,
+      internal_ip       => hiera('ovn_dbs_vip', $controller_virtual_ip),
+      service_port      => $ports[ovn_sbdb_port],
+      ip_addresses      => hiera('ovn_dbs_node_ips', $controller_hosts_real),
+      server_names      => hiera('ovn_dbs_node_names', $controller_hosts_names_real),
+      listen_options    => $ovn_db_listen_options,
+      mode              => 'tcp'
     }
   }
 
