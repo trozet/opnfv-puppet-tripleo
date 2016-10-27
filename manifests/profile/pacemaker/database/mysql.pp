@@ -74,7 +74,7 @@ class tripleo::profile::pacemaker::database::mysql (
       'wsrep_provider'                => '/usr/lib64/galera/libgalera_smm.so',
       'wsrep_cluster_name'            => 'galera_cluster',
       'wsrep_cluster_address'         => "gcomm://${galera_nodes}",
-      'wsrep_slave_threads'           => '1',
+      'wsrep_slave_threads'           => '30',
       'wsrep_certify_nonPK'           => '1',
       'wsrep_max_ws_rows'             => '131072',
       'wsrep_max_ws_size'             => '1073741824',
