@@ -217,6 +217,10 @@
 #  (optional) Enable or not RabbitMQ binding
 #  Defaults to false
 #
+# [*etcd*]
+#  (optional) Enable or not Etcd binding
+#  Defaults to hiera('etcd_enabled', false)
+#
 # [*redis*]
 #  (optional) Enable or not Redis binding
 #  Defaults to hiera('redis_enabled', false)
@@ -352,6 +356,7 @@ class tripleo::haproxy (
   $mysql_clustercheck        = false,
   $mysql_member_options      = undef,
   $rabbitmq                  = false,
+  $etcd                      = hiera('etcd_enabled', false),
   $redis                     = hiera('redis_enabled', false),
   $redis_password            = undef,
   $midonet_api               = false,
@@ -490,6 +495,11 @@ class tripleo::haproxy (
   $redis_vip = hiera('redis_vip', $controller_virtual_ip)
   $redis_bind_opts = {
     "${redis_vip}:6379" => $haproxy_listen_bind_param,
+  }
+
+  $etcd_vip = hiera('etcd_vip', $controller_virtual_ip)
+  $etcd_bind_opts = {
+    "${etcd_vip}:2379" => $haproxy_listen_bind_param,
   }
 
   class { '::haproxy':
@@ -944,6 +954,23 @@ class tripleo::haproxy (
       ports             => '5672',
       ipaddresses       => hiera('rabbitmq_network', $controller_hosts_real),
       server_names      => hiera('rabbitmq_node_names', $controller_hosts_names_real),
+      options           => $haproxy_member_options,
+    }
+  }
+
+  if $etcd {
+    haproxy::listen { 'etcd':
+      bind             => $etcd_bind_opts,
+      options          => {
+        'balance' => 'source',
+      },
+      collect_exported => false,
+    }
+    haproxy::balancermember { 'etcd':
+      listening_service => 'etcd',
+      ports             => '2379',
+      ipaddresses       => hiera('etcd_node_ips', $controller_hosts_real),
+      server_names      => hiera('etcd_node_names', $controller_hosts_names_real),
       options           => $haproxy_member_options,
     }
   }
