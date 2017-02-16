@@ -129,6 +129,10 @@
 #  (optional) Enable or not Sahara API binding
 #  defaults to hiera('sahara_api_enabled', false)
 #
+# [*tacker*]
+#  (optional) Enable or not Tacker API binding
+#  Defaults to hiera('tacker_enabled', false)
+#
 # [*trove*]
 #  (optional) Enable or not Trove API binding
 #  defaults to hiera('trove_api_enabled', false)
@@ -254,6 +258,9 @@
 #  (optional) Enable or not TripleO UI
 #  Defaults to false
 #
+# [*tacker_network*]
+#  (optional) Specify the network tacker is running on.
+#  Defaults to hiera('tacker_api_network', undef)
 # [*service_ports*]
 #  (optional) Hash that contains the values to override from the service ports
 #  The available keys to modify the services' ports are:
@@ -335,6 +342,7 @@ class tripleo::haproxy (
   $cinder                    = hiera('cinder_api_enabled', false),
   $manila                    = hiera('manila_api_enabled', false),
   $sahara                    = hiera('sahara_api_enabled', false),
+  $tacker                    = hiera('tacker_enabled', false),
   $trove                     = hiera('trove_api_enabled', false),
   $glance_api                = hiera('glance_api_enabled', false),
   $glance_registry           = hiera('glance_registry_enabled', false),
@@ -361,11 +369,13 @@ class tripleo::haproxy (
   $redis_password            = undef,
   $midonet_api               = false,
   $zaqar_api                 = hiera('zaqar_api_enabled', false),
+  $tacker                    = hiera('tacker_enabled', false),
   $ceph_rgw                  = hiera('ceph_rgw_enabled', false),
   $opendaylight              = hiera('opendaylight_api_enabled', false),
   $zaqar_ws                  = hiera('zaqar_api_enabled', false),
   $ui                        = hiera('enable_ui', false),
-  $service_ports             = {}
+  $service_ports             = {},
+  $tacker_network            = hiera('tacker_api_network', undef)
 ) {
   $default_service_ports = {
     aodh_api_port => 8042,
@@ -409,6 +419,8 @@ class tripleo::haproxy (
     sahara_api_ssl_port => 13386,
     swift_proxy_port => 8080,
     swift_proxy_ssl_port => 13808,
+    tacker_api_port => 9890,
+    tacker_api_ssl_port => 13989,
     trove_api_port => 8779,
     trove_api_ssl_port => 13779,
     ui_port => 3000,
@@ -648,6 +660,23 @@ class tripleo::haproxy (
       ip_addresses      => hiera('sahara_api_node_ips', $controller_hosts_real),
       server_names      => hiera('sahara_api_node_names', $controller_hosts_names_real),
       public_ssl_port   => $ports[sahara_api_ssl_port],
+    }
+  }
+
+  if $tacker {
+    ::tripleo::haproxy::endpoint { 'tacker':
+      public_virtual_ip => $public_virtual_ip,
+      internal_ip       => hiera('tacker_api_vip', $controller_virtual_ip),
+      service_port      => $ports[tacker_api_port],
+      ip_addresses      => hiera('tacker_node_ips', $controller_hosts_real),
+      server_names      => hiera('tacker_api_node_names', $controller_hosts_names_real),
+      mode              => 'http',
+      listen_options    => {
+          'http-request' => [
+            'set-header X-Forwarded-Proto https if { ssl_fc }',
+            'set-header X-Forwarded-Proto http if !{ ssl_fc }'],
+      },
+      public_ssl_port   => $ports[tacker_api_ssl_port],
     }
   }
 
