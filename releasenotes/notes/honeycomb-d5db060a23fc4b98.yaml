@@ -1,0 +1,7 @@
+---
+features:
+  - Add Honeycomb agent configuration. Honeycomb is a java-based agent that
+    runs on the same host as a VPP instance, and exposes yang models via
+    netconf or restconf to allow remote management of that VPP instance.
+    More information about Honeycomb can be found at
+    https://wiki.fd.io/view/Honeycomb
