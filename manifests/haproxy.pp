@@ -121,6 +121,10 @@
 #  (optional) Enable or not Cinder API binding
 #  Defaults to hiera('cinder_api_enabled', false)
 #
+# [*congress*]
+#  (optional) Enable or not Congress API binding
+#  Defaults to hiera('congress_enabled', false)
+#
 # [*manila*]
 #  (optional) Enable or not Manila API binding
 #  Defaults to hiera('manila_api_enabled', false)
@@ -258,6 +262,10 @@
 #  (optional) Enable or not TripleO UI
 #  Defaults to false
 #
+# [*congress_network*]
+#  (optional) Specify the network congress is running on.
+#  Defaults to hiera('congress_api_network', undef)
+#
 # [*tacker_network*]
 #  (optional) Specify the network tacker is running on.
 #  Defaults to hiera('tacker_api_network', undef)
@@ -340,6 +348,7 @@ class tripleo::haproxy (
   $keystone_public           = hiera('keystone_enabled', false),
   $neutron                   = hiera('neutron_api_enabled', false),
   $cinder                    = hiera('cinder_api_enabled', false),
+  $congress                  = hiera('congress_enabled', false),
   $manila                    = hiera('manila_api_enabled', false),
   $sahara                    = hiera('sahara_api_enabled', false),
   $tacker                    = hiera('tacker_enabled', false),
@@ -375,6 +384,7 @@ class tripleo::haproxy (
   $zaqar_ws                  = hiera('zaqar_api_enabled', false),
   $ui                        = hiera('enable_ui', false),
   $service_ports             = {},
+  $congress_network          = hiera('congress_api_network', undef),
   $tacker_network            = hiera('tacker_api_network', undef)
 ) {
   $default_service_ports = {
@@ -384,6 +394,8 @@ class tripleo::haproxy (
     ceilometer_api_ssl_port => 13777,
     cinder_api_port => 8776,
     cinder_api_ssl_port => 13776,
+    congress_api_port => 1789,
+    congress_api_ssl_port => 13789,
     glance_api_port => 9292,
     glance_api_ssl_port => 13292,
     glance_registry_port => 9191,
@@ -633,6 +645,23 @@ class tripleo::haproxy (
             'set-header X-Forwarded-Proto http if !{ ssl_fc }'],
       },
       public_ssl_port   => $ports[cinder_api_ssl_port],
+    }
+  }
+
+  if $congress {
+    ::tripleo::haproxy::endpoint { 'congress':
+      public_virtual_ip => $public_virtual_ip,
+      internal_ip       => hiera('congress_api_vip', $controller_virtual_ip),
+      service_port      => $ports[congress_api_port],
+      ip_addresses      => hiera('congress_node_ips', $controller_hosts_real),
+      server_names      => hiera('congress_api_node_names', $controller_hosts_names_real),
+      mode              => 'http',
+      listen_options    => {
+          'http-request' => [
+            'set-header X-Forwarded-Proto https if { ssl_fc }',
+            'set-header X-Forwarded-Proto http if !{ ssl_fc }'],
+      },
+      public_ssl_port   => $ports[congress_api_ssl_port],
     }
   }
 
