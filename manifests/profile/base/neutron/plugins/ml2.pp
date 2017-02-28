@@ -71,5 +71,9 @@ class tripleo::profile::base::neutron::plugins::ml2 (
     if 'ovn' in $mechanism_drivers {
       include ::tripleo::profile::base::neutron::plugins::ml2::ovn
     }
+
+    if 'vpp' in $mechanism_drivers {
+      include ::tripleo::profile::base::neutron::plugins::ml2::vpp
+    }
   }
 }
