@@ -71,5 +71,10 @@ class tripleo::profile::base::neutron::plugins::ml2 (
     if 'ovn' in $mechanism_drivers {
       include ::tripleo::profile::base::neutron::plugins::ml2::ovn
     }
+    
+    if 'onos_ml2' in $mechanism_drivers {
+      include ::tripleo::profile::base::neutron::plugins::ml2::onos
+    }
+
   }
 }
