@@ -107,7 +107,7 @@ class tripleo::profile::base::database::mysql (
       # Raise the mysql file limit
       ::systemd::service_limits { 'mariadb.service':
         limits => {
-          LimitNOFILE => 16384
+          'LimitNOFILE' => 16384
         }
       }
     }
