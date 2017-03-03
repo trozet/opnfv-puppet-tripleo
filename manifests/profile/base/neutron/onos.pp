@@ -32,7 +32,7 @@
 #
 class tripleo::profile::base::neutron::onos (
   $step         = hiera('step'),
-  $onos_api_ips  = hiera('opendaylight_api_node_ips'),
+  $onos_api_ips  = hiera('aodh_api_node_ips'),
   $node_name    = hiera('bootstack_nodeid')
 ) {
 

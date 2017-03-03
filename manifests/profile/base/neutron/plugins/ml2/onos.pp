@@ -51,7 +51,7 @@ class tripleo::profile::base::neutron::plugins::ml2::onos (
   if $step >= 4 {
 
     class { '::onos::start':
-         onos_ip => $onos_url_ip,
+         onos_ip => $onos_url_ip[0],
     }
   }
 }
