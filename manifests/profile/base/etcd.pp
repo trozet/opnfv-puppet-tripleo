@@ -50,7 +50,7 @@ class tripleo::profile::base::etcd (
   $nodes       = hiera('etcd_node_names', []),
   $step        = hiera('step'),
 ) {
-  if $step >= 1 {
+  if $step >= 2 {
     if count($nodes) > 1 {
       $cluster_enabled = true
     } else {
