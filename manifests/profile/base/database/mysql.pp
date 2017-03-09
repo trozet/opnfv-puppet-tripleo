@@ -103,7 +103,7 @@ class tripleo::profile::base::database::mysql (
       remove_default_accounts => $remove_default_accounts,
     }
 
-    if $generate_dropin_file_limit {
+    if $generate_dropin_file_limit and $manage_resources {
       # Raise the mysql file limit
       ::systemd::service_limits { 'mariadb.service':
         limits => {
