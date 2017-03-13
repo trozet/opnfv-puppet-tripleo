@@ -23,39 +23,35 @@
 #   for more details.
 #   Defaults to hiera('step')
 #
-# [*mechanism_drivers*]
-#   (Optional) The mechanism drivers to use with the Ml2 plugin
-#   Defaults to hiera('neutron::plugins::ml2::mechanism_drivers')
-#
 # [*etcd_host*]
-# (optional) etcd server host VIP.
-# Defaults to hiera('etcd_vip')
+#   (Optional) etcd server VIP.
+#   Defaults to hiera('etcd_vip')
 #
 # [*etcd_port*]
-# (optional) etcd server listening port.
-# Defaults to hiera('tripleo::profile::base::etcd::client_port')
-
-
+#   (Optional) etcd server listening port.
+#   Defaults to 2379
+#
+# [*physnet_mapping*]
+#   (Optional) physnet mapping, example: 'datacentre:eth1'. Note that the
+#   interface specified here is a kernel interface name that is bound to
+#   VPP.
+#   Defaults to []
+#
 class tripleo::profile::base::neutron::agents::vpp(
-  $step              = hiera('step'),
-  $mechanism_drivers = hiera('neutron::plugins::ml2::mechanism_drivers'),
-  $etcd_host         = hiera('etcd_vip'),
-  $etcd_port         = 2379,
+  $step            = hiera('step'),
+  $etcd_host       = hiera('etcd_vip'),
+  $etcd_port       = 2379,
+  $physnet_mapping = [],
 ) {
   if empty($etcd_host) {
-    fail("etcd_vip not set in hieradata")
-  }
-  if empty($etcd_port) {
-    #Use default etcd client port
-    $etcd_port = 2379
+    fail('etcd_vip not set in hieradata')
   }
 
   if $step >= 4 {
-    if 'vpp' in $mechanism_drivers  {
-      class { '::neutron::agents::ml2::vpp':
-        etcd_host => $etcd_host,
-        etcd_port => $etcd_port,
-      }
+    class { '::neutron::agents::ml2::vpp':
+      etcd_host => $etcd_host,
+      etcd_port => $etcd_port,
+      physnets  => vpp_physnet_mapping($physnet_mapping),
     }
   }
 }
