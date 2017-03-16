@@ -37,10 +37,7 @@ class tripleo::profile::base::neutron::plugins::ml2::vpp (
   if empty($etcd_host) {
     fail("etcd_vip not set in hieradata")
   }
-  if empty($etcd_port) {
-    #Use default etcd client port
-    $etcd_port = 2379
-  }
+
   if $step >= 4 {
     class { '::neutron::plugins::ml2::vpp':
       etcd_host => $etcd_host,
