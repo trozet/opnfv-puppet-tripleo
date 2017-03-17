@@ -50,12 +50,7 @@ class tripleo::profile::base::etcd (
   $nodes       = hiera('etcd_node_names', []),
   $step        = hiera('step'),
 ) {
-  if $step >= 1 {
-    if count($nodes) > 1 {
-      $cluster_enabled = true
-    } else {
-      $cluster_enabled = false
-    }
+  if $step >= 2 {
 
     class {'::etcd':
       listen_client_urls          => "http://${bind_ip}:${client_port}",
@@ -63,7 +58,6 @@ class tripleo::profile::base::etcd (
       listen_peer_urls            => "http://${bind_ip}:${peer_port}",
       initial_advertise_peer_urls => "http://${bind_ip}:${peer_port}",
       initial_cluster             => regsubst($nodes, '.+', "\\0=http://\\0:${peer_port}"),
-      cluster_enabled             => $cluster_enabled,
       proxy                       => 'off',
     }
   }
