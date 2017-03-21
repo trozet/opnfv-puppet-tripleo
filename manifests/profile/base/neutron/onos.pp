@@ -14,7 +14,7 @@
 #
 # == Class: tripleo::profile::base::neutron::onos
 #
-# OpenDaylight Neutron profile for TripleO
+# ONOS Neutron profile for TripleO
 #
 # === Parameters
 #
@@ -23,8 +23,9 @@
 #   Defaults to hiera('step')
 #
 # [*onos_api_ips*]
-#   (Optional) List of OpenStack Controller IPs for ODL API
+#   (Optional) List of OpenStack Controller IPs for ONOS API
 #   Defaults to hiera('onos_api_node_ips')
+#  $onos_api_ips  = hiera('aodh_api_node_ips'),
 #
 # [*node_name*]
 #   (Optional) The short hostname of node
@@ -32,7 +33,7 @@
 #
 class tripleo::profile::base::neutron::onos (
   $step         = hiera('step'),
-  $onos_api_ips  = hiera('aodh_api_node_ips'),
+  $onos_api_ips  = hiera('onos_api_node_ips'),
   $node_name    = hiera('bootstack_nodeid')
 ) {
 

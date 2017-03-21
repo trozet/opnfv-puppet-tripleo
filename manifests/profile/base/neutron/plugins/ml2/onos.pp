@@ -14,29 +14,14 @@
 #
 # == Class: tripleo::profile::base::neutron::plugins::ml2::onos
 #
-# OpenDaylight ML2 Neutron profile for TripleO
+# ONOS ML2 Neutron profile for TripleO
 #
 # === Parameters
 #
-# [*odl_port*]
-#   (Optional) Port to use for OpenDaylight
-#   Defaults to hiera('onos::odl_rest_port')
 #
-# [*odl_username*]
-#   (Optional) Username to configure for OpenDaylight
-#   Defaults to 'admin'
-#
-# [*odl_password*]
-#   (Optional) Password to configure for OpenDaylight
-#   Defaults to 'admin'
-#
-# [*odl_url_ip*]
-#   (Optional) Virtual IP address for ODL Api Service
+# [*onos_url_ip*]
+#   (Optional) Virtual IP address for ONOS Api Service
 #   Defaults to hiera('onos_api_vip')
-#
-# [*conn_proto*]
-#   (Optional) Protocol to use to for ODL REST access
-#   Defaults to hiera('onos::nb_connection_protocol')
 #
 # [*step*]
 #   (Optional) The current step in deployment. See tripleo-heat-templates
@@ -44,7 +29,7 @@
 #   Defaults to hiera('step')
 #
 class tripleo::profile::base::neutron::plugins::ml2::onos (
-  $onos_url_ip   = hiera('aodh_api_node_ips'),
+  $onos_url_ip   = hiera('onos_api_node_ips'),
   $step         = hiera('step'),
 ) {
 
