@@ -21,7 +21,7 @@
 #
 # [*onos_url_ip*]
 #   (Optional) Virtual IP address for ONOS Api Service
-#   Defaults to hiera('onos_api_vip')
+#   Defaults to hiera('onos_api_node_ips')
 #
 # [*step*]
 #   (Optional) The current step in deployment. See tripleo-heat-templates
