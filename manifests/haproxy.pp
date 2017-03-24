@@ -1119,18 +1119,18 @@ class tripleo::haproxy (
     }
   }
   
-  if $onos {
-    ::tripleo::haproxy::endpoint { 'onos':
-      internal_ip    => unique([hiera('onos_api_vip', $controller_virtual_ip), $controller_virtual_ip]),
-      service_port   => $ports[onos_api_port],
-      ip_addresses   => hiera('onos_api_node_ips', $controller_hosts_real),
-      server_names   => hiera('onos_api_node_names', $controller_hosts_names_real),
-      mode           => 'http',
-      listen_options => {
-        'balance' => 'source',
-      },
-    }
-  }
+#  if $onos {
+#    ::tripleo::haproxy::endpoint { 'onos':
+#      internal_ip    => unique([hiera('onos_api_vip', $controller_virtual_ip), $controller_virtual_ip]),
+#      service_port   => $ports[onos_api_port],
+#      ip_addresses   => hiera('onos_api_node_ips', $controller_hosts_real),
+#      server_names   => hiera('onos_api_node_names', $controller_hosts_names_real),
+#      mode           => 'http',
+#      listen_options => {
+#        'balance' => 'source',
+#      },
+#    }
+#  }
 
   if $zaqar_ws {
     ::tripleo::haproxy::endpoint { 'zaqar_ws':
