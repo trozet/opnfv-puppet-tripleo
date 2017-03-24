@@ -83,11 +83,11 @@ class tripleo::profile::pacemaker::ovn_northd (
     pacemaker::resource::service { "$ovn_northd_resource_name":
       op_params     => 'start timeout=200s stop timeout=200s',
       tries         => $pcs_tries,
-      #location_rule => {
-      #  resource_discovery => 'exclusive',
-      #  score              => 0,
-      #  expression         => ['ovn-northd-role eq true'],
-      #},
+      location_rule => {
+        resource_discovery => 'exclusive',
+        score              => 0,
+        expression         => ['ovn-northd-role eq true'],
+      },
     }
 
     pacemaker::constraint::base { "${ovndb_vip_resource_name}-then-${ovndb_servers_resource_name}":
@@ -110,21 +110,21 @@ class tripleo::profile::pacemaker::ovn_northd (
                           Pacemaker::Resource::Service["${ovn_northd_resource_name}"]],
     }
 
-    pacemaker::constraint::colocation { "${ovndb_vip_resource_name}-with-${ovndb_servers_resource_name}":
-      source       => "${ovndb_vip_resource_name}",
-      target       => "${ovndb_servers_resource_name}-master",
-      master_slave => true,
-      score        => 'INFINITY',
-      require      =>  [Pacemaker::Resource::Ocf["${ovndb_servers_resource_name}"],
-                        Pacemaker::Resource::Ip["${ovndb_vip_resource_name}"]],
-    }
+    #pacemaker::constraint::colocation { "${ovndb_vip_resource_name}-with-${ovndb_servers_resource_name}-INFINITY":
+    #  source       => "${ovndb_vip_resource_name}",
+    #  target       => "${ovndb_servers_resource_name}-master",
+    #  master_slave => true,
+    #  score        => 'INFINITY',
+    #  require      =>  [Pacemaker::Resource::Ocf["${ovndb_servers_resource_name}"],
+    #                    Pacemaker::Resource::Ip["${ovndb_vip_resource_name}"]],
+    #}
 
-    pacemaker::constraint::colocation { "${ovndb_vip_resource_name}-with-${ovn_northd_resource_name}":
-      source  => "${ovndb_vip_resource_name}",
-      target  => "${ovn_northd_resource_name}",
-      score   => 'INFINITY',
-      require => [Pacemaker::Resource::Service["${ovn_northd_resource_name}"],
-                  Pacemaker::Resource::Ip["${ovndb_vip_resource_name}"]],
-    }
+    #pacemaker::constraint::colocation { "${ovndb_vip_resource_name}-with-${ovn_northd_resource_name}-INFINITY":
+    #  source  => "${ovndb_vip_resource_name}",
+    #  target  => "${ovn_northd_resource_name}",
+    #  score   => 'INFINITY',
+    #  require => [Pacemaker::Resource::Service["${ovn_northd_resource_name}"],
+    #              Pacemaker::Resource::Ip["${ovndb_vip_resource_name}"]],
+    #}
   }
 }
