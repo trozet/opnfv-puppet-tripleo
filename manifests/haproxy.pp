@@ -428,6 +428,7 @@ class tripleo::haproxy (
     nova_novnc_port => 6080,
     nova_novnc_ssl_port => 13080,
     opendaylight_api_port => 8081,
+    onos_api_port => 8181,
     sahara_api_port => 8386,
     sahara_api_ssl_port => 13386,
     swift_proxy_port => 8080,
