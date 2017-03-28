@@ -30,6 +30,12 @@ class tripleo::profile::base::neutron::agents::honeycomb (
   $step = hiera('step'),
 ) {
   if $step >= 4 {
-    include ::fdio::honeycomb
+    if $hostname =~ /.*controller.*/ {
+      class { '::fdio::honeycomb':
+        notify => Service['opendaylight']
+      }
+    } else {
+      include ::fdio::honeycomb
+    }
   }
 }
