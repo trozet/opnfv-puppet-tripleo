@@ -428,7 +428,7 @@ class tripleo::haproxy (
     nova_novnc_port => 6080,
     nova_novnc_ssl_port => 13080,
     opendaylight_api_port => 8081,
-    onos_api_port => 8181,
+    onos_api_port => 8081,
     sahara_api_port => 8386,
     sahara_api_ssl_port => 13386,
     swift_proxy_port => 8080,
@@ -1119,18 +1119,18 @@ class tripleo::haproxy (
     }
   }
   
-#  if $onos {
-#    ::tripleo::haproxy::endpoint { 'onos':
-#      internal_ip    => unique([hiera('onos_api_vip', $controller_virtual_ip), $controller_virtual_ip]),
-#      service_port   => $ports[onos_api_port],
-#      ip_addresses   => hiera('onos_api_node_ips', $controller_hosts_real),
-#      server_names   => hiera('onos_api_node_names', $controller_hosts_names_real),
-#      mode           => 'http',
-#      listen_options => {
-#        'balance' => 'source',
-#      },
-#    }
-#  }
+  if $onos {
+    ::tripleo::haproxy::endpoint { 'onos':
+      internal_ip    => unique([hiera('onos_api_vip', $controller_virtual_ip), $controller_virtual_ip]),
+      service_port   => $ports[onos_api_port],
+      ip_addresses   => hiera('onos_api_node_ips', $controller_hosts_real),
+      server_names   => hiera('onos_api_node_names', $controller_hosts_names_real),
+      mode           => 'http',
+      listen_options => {
+        'balance' => 'source',
+      },
+    }
+  }
 
   if $zaqar_ws {
     ::tripleo::haproxy::endpoint { 'zaqar_ws':
