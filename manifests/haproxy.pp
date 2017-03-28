@@ -254,6 +254,11 @@
 #  (optional) Enable or not OpenDaylight binding
 #  Defaults to hiera('opendaylight_api_enabled', false)
 #
+# [*onos*]
+#  (optional) Enable or not ONOS binding
+#  Defaults to hiera('onos_api_enabled', false)
+
+#
 # [*zaqar_ws*]
 #  (optional) Enable or not Zaqar Websockets binding
 #  Defaults to false
