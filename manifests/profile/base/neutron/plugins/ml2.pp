@@ -76,5 +76,8 @@ class tripleo::profile::base::neutron::plugins::ml2 (
       include ::tripleo::profile::base::neutron::plugins::ml2::onos
     }
 
+    if 'vpp' in $mechanism_drivers {
+      include ::tripleo::profile::base::neutron::plugins::ml2::vpp
+    }
   }
 }

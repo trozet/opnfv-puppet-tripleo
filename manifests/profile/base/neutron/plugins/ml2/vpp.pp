@@ -1,4 +1,4 @@
-# Copyright 2016 Red Hat, Inc.
+# Copyright 2017 Red Hat, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -12,31 +12,36 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-# == Class: tripleo::profile::base::neutron::agents::ovn
+# == Class: tripleo::profile::base::neutron::plugins::ml2::vpp
 #
-# OVN Neutron agent profile for tripleo
+# VPP Neutron ML2 profile for tripleo
 #
-# [*ovn_db_host*]
-#   (Optional) The IP-Address where OVN DBs are listening.
-#   Defaults to hiera('ovn_dbs_vip')
+# [*etcd_host*]
+# (optional) etcd server host VIP.
+# Defaults to hiera('etcd_vip')
 #
-# [*ovn_sbdb_port*]
-#   (Optional) Port number on which southbound database is listening
-#   Defaults to hiera('ovn::southbound::port')
+# [*etcd_port*]
+# (optional) etcd server listening port.
+# Defaults to hiera('tripleo::profile::base::etcd::client_port')
 #
 # [*step*]
 #   (Optional) The current step in deployment. See tripleo-heat-templates
 #   for more details.
 #   Defaults to hiera('step')
 #
-class tripleo::profile::base::neutron::agents::ovn (
-  $ovn_db_host    = hiera('ovn_dbs_vip'),
-  $ovn_sbdb_port  = hiera('ovn::southbound::port'),
-  $step           = hiera('step')
+class tripleo::profile::base::neutron::plugins::ml2::vpp (
+  $etcd_host = hiera('etcd_vip'),
+  $etcd_port = 2379,
+  $step      = hiera('step')
 ) {
+  if empty($etcd_host) {
+    fail("etcd_vip not set in hieradata")
+  }
+
   if $step >= 4 {
-    class { '::ovn::controller':
-      ovn_remote     => "tcp:${ovn_db_host}:${ovn_sbdb_port}",
+    class { '::neutron::plugins::ml2::vpp':
+      etcd_host => $etcd_host,
+      etcd_port => $etcd_port,
     }
   }
 }
