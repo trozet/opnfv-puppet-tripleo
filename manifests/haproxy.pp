@@ -254,10 +254,13 @@
 #  (optional) Enable or not OpenDaylight binding
 #  Defaults to hiera('opendaylight_api_enabled', false)
 #
+<<<<<<< HEAD
 # [*onos*]
 #  (optional) Enable or not ONOS binding
 #  Defaults to hiera('onos_api_enabled', false)
 #
+=======
+>>>>>>> 25ac4a9e6ef3178434820305650323b59e5c4ae2
 # [*ovn_dbs*]
 #  (optional) Enable or not OVN northd binding
 #  Defaults to hiera('ovn_dbs_enabled', false)
@@ -1148,6 +1151,40 @@ class tripleo::haproxy (
       listen_options => {
         'balance' => 'source',
       },
+    }
+  }
+
+
+  if $ovn_dbs and $ovn_dbs_ha_disabled {
+    # FIXME: is this config enough to ensure we only hit the first node in
+    # ovn_northd_node_ips ?
+    # We only configure ovn_dbs_vip in haproxy if HA for OVN DB servers is
+    # disabled.
+    # If HA is enabled, pacemaker configures the OVN DB servers accordingly.
+    $ovn_db_listen_options = {
+      'option'         => [ 'tcpka' ],
+      'timeout client' => '90m',
+      'timeout server' => '90m',
+      'stick-table'    => 'type ip size 1000',
+      'stick'          => 'on dst',
+    }
+    ::tripleo::haproxy::endpoint { 'ovn_nbdb':
+      public_virtual_ip => $public_virtual_ip,
+      internal_ip       => hiera('ovn_dbs_vip', $controller_virtual_ip),
+      service_port      => $ports[ovn_nbdb_port],
+      ip_addresses      => hiera('ovn_dbs_node_ips', $controller_hosts_real),
+      server_names      => hiera('ovn_dbs_node_names', $controller_hosts_names_real),
+      listen_options    => $ovn_db_listen_options,
+      mode              => 'tcp'
+    }
+    ::tripleo::haproxy::endpoint { 'ovn_sbdb':
+      public_virtual_ip => $public_virtual_ip,
+      internal_ip       => hiera('ovn_dbs_vip', $controller_virtual_ip),
+      service_port      => $ports[ovn_sbdb_port],
+      ip_addresses      => hiera('ovn_dbs_node_ips', $controller_hosts_real),
+      server_names      => hiera('ovn_dbs_node_names', $controller_hosts_names_real),
+      listen_options    => $ovn_db_listen_options,
+      mode              => 'tcp'
     }
   }
 
