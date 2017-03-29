@@ -254,13 +254,10 @@
 #  (optional) Enable or not OpenDaylight binding
 #  Defaults to hiera('opendaylight_api_enabled', false)
 #
-<<<<<<< HEAD
 # [*onos*]
 #  (optional) Enable or not ONOS binding
 #  Defaults to hiera('onos_api_enabled', false)
 #
-=======
->>>>>>> 25ac4a9e6ef3178434820305650323b59e5c4ae2
 # [*ovn_dbs*]
 #  (optional) Enable or not OVN northd binding
 #  Defaults to hiera('ovn_dbs_enabled', false)
