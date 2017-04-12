@@ -40,7 +40,7 @@ class tripleo::profile::base::neutron::plugins::ovs::onos (
 
     # Build URL to check if onos is up before connecting OVS
     class { '::onos::ovs':
-         manager_ip  => $onos_api_ips[0],
+         controllers_ip  => $onos_api_ips,
     }
   }
 }
