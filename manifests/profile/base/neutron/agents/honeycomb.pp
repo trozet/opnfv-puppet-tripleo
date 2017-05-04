@@ -26,10 +26,18 @@
 #   (Optional) The current step of the deployment
 #   Defaults to hiera('step')
 #
+# [*interface_role_mapping*]
+#   (Optional) VPP interface role mapping, note that the interface name
+#   specified here is a kernel interface name that is bound to VPP.
+#   Defaults to []
+#
 class tripleo::profile::base::neutron::agents::honeycomb (
   $step = hiera('step'),
+  $interface_role_mapping = [],
 ) {
   if $step >= 4 {
-    include ::fdio::honeycomb
+    class { '::fdio::honeycomb':
+      interface_role_map => honeycomb_int_role_mapping($interface_role_mapping),
+    }
   }
 }
