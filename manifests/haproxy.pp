@@ -254,6 +254,10 @@
 #  (optional) Enable or not OpenDaylight binding
 #  Defaults to hiera('opendaylight_api_enabled', false)
 #
+# [*onos*]
+#  (optional) Enable or not ONOS binding
+#  Defaults to hiera('onos_api_enabled', false)
+#
 # [*ovn_dbs*]
 #  (optional) Enable or not OVN northd binding
 #  Defaults to hiera('ovn_dbs_enabled', false)
@@ -392,6 +396,7 @@ class tripleo::haproxy (
   $tacker                    = hiera('tacker_enabled', false),
   $ceph_rgw                  = hiera('ceph_rgw_enabled', false),
   $opendaylight              = hiera('opendaylight_api_enabled', false),
+  $onos                      = hiera('onos_api_enabled', false),
   $zaqar_ws                  = hiera('zaqar_api_enabled', false),
   $ui                        = hiera('enable_ui', false),
   $service_ports             = {},
@@ -440,6 +445,7 @@ class tripleo::haproxy (
     nova_novnc_port => 6080,
     nova_novnc_ssl_port => 13080,
     opendaylight_api_port => 8081,
+    onos_api_port => 8081,
     ovn_nbdb_port => 6641,
     ovn_sbdb_port => 6642,
     sahara_api_port => 8386,
@@ -1131,7 +1137,19 @@ class tripleo::haproxy (
       },
     }
   }
-
+  
+  if $onos {
+    ::tripleo::haproxy::endpoint { 'onos':
+      internal_ip    => unique([hiera('onos_api_vip', $controller_virtual_ip), $controller_virtual_ip]),
+      service_port   => $ports[onos_api_port],
+      ip_addresses   => hiera('onos_api_node_ips', $controller_hosts_real),
+      server_names   => hiera('onos_api_node_names', $controller_hosts_names_real),
+      mode           => 'http',
+      listen_options => {
+        'balance' => 'source',
+      },
+    }
+  }
 
   if $ovn_dbs and $ovn_dbs_ha_disabled {
     # FIXME: is this config enough to ensure we only hit the first node in
