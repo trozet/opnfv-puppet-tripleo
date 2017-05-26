@@ -30,13 +30,28 @@
 #   (Optional) The short hostname of node
 #   Defaults to hiera('bootstack_nodeid')
 #
+# [*vpp_routing*]
+#   (Optional) Whether to configure vpp routing node
+#   Defaults to false
+#
 class tripleo::profile::base::neutron::opendaylight (
   $step         = hiera('step'),
   $odl_api_ips  = hiera('opendaylight_api_node_ips'),
-  $node_name    = hiera('bootstack_nodeid')
+  $node_name    = hiera('bootstack_nodeid'),
+  $vpp_routing  = false
 ) {
 
   if $step >= 1 {
+    if $vpp_routing {
+      $compute_nodes = hiera("nova_compute_short_node_names", [])
+      if empty($compute_nodes) {
+        fail('No compute nodes found')
+      }
+      $vpp_routing_node = "${compute_nodes[0]}.$::domain"
+    } else {
+      $vpp_routing_node = undef
+    }
+
     if empty($odl_api_ips) {
       fail('No IPs assigned to OpenDaylight Api Service')
     } elsif size($odl_api_ips) == 2 {
@@ -48,9 +63,12 @@ class tripleo::profile::base::neutron::opendaylight (
         enable_ha     => true,
         ha_node_ips   => $odl_api_ips,
         ha_node_index => $ha_node_index,
+        vpp_routing_node => $vpp_routing_node,
       }
     } else {
-      include ::opendaylight
+      class { '::opendaylight':
+        vpp_routing_node => $vpp_routing_node,
+      }
     }
   }
 }
