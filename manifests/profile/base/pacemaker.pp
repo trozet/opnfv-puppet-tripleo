@@ -57,6 +57,7 @@ class tripleo::profile::base::pacemaker (
     }
     class { '::pacemaker::stonith':
       disable => !$enable_fencing,
+      tries   => 20,
     }
     if $enable_fencing {
       include ::tripleo::fencing
