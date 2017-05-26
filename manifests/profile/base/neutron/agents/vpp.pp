@@ -37,11 +37,17 @@
 #   VPP.
 #   Defaults to []
 #
+# [*type_drivers*]
+#   (optional) List of network type driver entrypoints to be loaded
+#   Could be an array that can contain flat, vlan or vxlan
+#   Defaults to hiera('neutron::plugins::ml2::type_drivers', undef)
+#
 class tripleo::profile::base::neutron::agents::vpp(
   $step            = hiera('step'),
   $etcd_host       = hiera('etcd_vip'),
   $etcd_port       = 2379,
   $physnet_mapping = [],
+  $type_drivers    = hiera('neutron::plugins::ml2::type_drivers', undef),
 ) {
   if empty($etcd_host) {
     fail('etcd_vip not set in hieradata')
@@ -49,9 +55,10 @@ class tripleo::profile::base::neutron::agents::vpp(
 
   if $step >= 4 {
     class { '::neutron::agents::ml2::vpp':
-      etcd_host => $etcd_host,
-      etcd_port => $etcd_port,
-      physnets  => vpp_physnet_mapping($physnet_mapping),
+      etcd_host    => $etcd_host,
+      etcd_port    => $etcd_port,
+      physnets     => vpp_physnet_mapping($physnet_mapping),
+      type_drivers => $type_drivers,
     }
   }
 }
