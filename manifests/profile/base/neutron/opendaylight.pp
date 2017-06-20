@@ -36,7 +36,7 @@ class tripleo::profile::base::neutron::opendaylight (
   $node_name    = hiera('bootstack_nodeid')
 ) {
 
-  if $step >= 1 {
+  if $step == 1 {
     if empty($odl_api_ips) {
       fail('No IPs assigned to OpenDaylight Api Service')
     } elsif size($odl_api_ips) == 2 {
