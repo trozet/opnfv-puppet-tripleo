@@ -35,7 +35,42 @@ class tripleo::profile::base::neutron::opendaylight (
   $odl_api_ips  = hiera('opendaylight_api_node_ips'),
   $node_name    = hiera('bootstack_nodeid')
 ) {
-
+  if hiera('vpp_enabled', False) and ('odl-router_v2' in hiera('neutron::service_plugins', [])) {
+    file { 'org.opendaylight.groupbasedpolicy.renderer.vpp.startup.cfg':
+      ensure => file,
+      path   => '/opt/opendaylight/etc/org.opendaylight.groupbasedpolicy.renderer.vpp.startup.cfg',
+      owner  => 'odl',
+      group  => 'odl',
+    }
+    $odl_bind_ip = hiera('opendaylight::odl_bind_ip')
+    file_line { 'odl-ip':
+      path  => '/opt/opendaylight/etc/org.opendaylight.groupbasedpolicy.renderer.vpp.startup.cfg',
+      line  => "odl.ip = ${odl_bind_ip}",
+      match => '^odl.ip =.*$',
+    }
+    file_line { 'gbp.lisp.enabled':
+      path  => '/opt/opendaylight/etc/org.opendaylight.groupbasedpolicy.renderer.vpp.startup.cfg',
+      line  => "gbp.lisp.enabled = true",
+    }
+    file_line { 'vpp.lisp.mapregister.enabled':
+      path  => '/opt/opendaylight/etc/org.opendaylight.groupbasedpolicy.renderer.vpp.startup.cfg',
+      line  => "vpp.lisp.mapregister.enabled = true",
+    }
+    file_line { 'vpp.l3.flat.enabled':
+      path  => '/opt/opendaylight/etc/org.opendaylight.groupbasedpolicy.renderer.vpp.startup.cfg',
+      line  => "vpp.l3.flat.enabled = true",
+    }
+    file { '/opt/opendaylight/etc/custom.properties':
+      ensure => file,
+      path   => '/opt/opendaylight/etc/custom.properties',
+      owner  => 'odl',
+      group  => 'odl',
+    }
+    file_line { 'lisp.authEnabled':
+      path  => '/opt/opendaylight/etc/custom.properties',
+      line  => "lisp.authEnabled = false",
+    }
+  }
   if $step == 1 {
     if empty($odl_api_ips) {
       fail('No IPs assigned to OpenDaylight Api Service')
